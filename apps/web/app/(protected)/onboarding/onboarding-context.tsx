@@ -4,21 +4,22 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 
 export interface OnboardingData {
     // Step 1: Personal Information
-    phoneNumber: string
+    phNo: string
+    brokerageName: string
     professionalEmail: string
     yearsInBusiness: number
     calendlyLink?: string
 
     // Step 2: Company & Markets
-    companyName: string
     markets: string[] // Cities
 
     // Step 3: Branding
-    realtorType: 'solo' | 'team' | ''
+    realtorType: 'solo' | 'team' | 'brokerage'
 
     // Step 4: Branding Extended
-    brandLogo: string // URL from Cloudinary
-    brokerageName: string
+    signatureImageUrl: string // URL from Cloudinary
+    brandLogoUrl: string // URL from Cloudinary
+    brokerageLogoUrl: string // URL from Cloudinary
 }
 
 interface OnboardingContextType {
@@ -32,14 +33,15 @@ interface OnboardingContextType {
 }
 
 const defaultData: OnboardingData = {
-    phoneNumber: '',
+    phNo: '',
     professionalEmail: '',
     yearsInBusiness: 0,
     calendlyLink: '',
-    companyName: '',
     markets: [],
-    realtorType: '',
-    brandLogo: '',
+    realtorType: 'solo',
+    signatureImageUrl: '',
+    brandLogoUrl: '',
+    brokerageLogoUrl: '',
     brokerageName: '',
 }
 
