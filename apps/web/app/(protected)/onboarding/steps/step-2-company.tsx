@@ -32,7 +32,7 @@ export default function Step2Company() {
     }, [])
 
     const handleNext = () => {
-        if (!data.companyName || data.markets.length === 0) {
+        if (!data.businessName || data.markets.length === 0) {
             alert('Please fill in company name and at least one market')
             return
         }
@@ -64,8 +64,8 @@ export default function Step2Company() {
                     <Input
                         id="company"
                         placeholder="Your Company Name"
-                        value={data.companyName}
-                        onChange={(e) => updateData({ companyName: e.target.value })}
+                        value={data.businessName}
+                        onChange={(e) => updateData({ businessName: e.target.value })}
                         className="bg-zinc-900 border-zinc-800 text-white focus:ring-yellow-500 focus:border-yellow-500"
                     />
                 </div>

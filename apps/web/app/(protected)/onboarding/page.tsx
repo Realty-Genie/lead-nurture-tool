@@ -1,15 +1,21 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { OnboardingProvider, useOnboarding } from './onboarding-context'
 import Step1Personal from './steps/step-1-personal'
 import Step2Company from './steps/step-2-company'
 import Step3Branding from './steps/step-3-branding'
 import Step4BrandingExtended from './steps/step-4-branding-extended'
 import Step5Review from './steps/step-5-review'
+import { api } from '@/lib/api'
+import { useAuth } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 
 function OnboardingContent() {
     const { currentStep, totalSteps } = useOnboarding()
-
+    const { getToken } = useAuth()
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
     const renderStep = () => {
         switch (currentStep) {
             case 1: return <Step1Personal />
@@ -20,11 +26,34 @@ function OnboardingContent() {
             default: return <Step1Personal />
         }
     }
+    useEffect(() => {
+        const main = async () => {
+            setLoading(true)
+            const token = await getToken()
+            const response = await api.get('/api/users/onboard-status', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            console.log(response.data)
+            if (response.data.isOnboarded) {
+                router.push('/dashboard')
+            }
+            setLoading(false)
+        }
+        main()
+    }, [])
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
-            <div className="w-full max-w-xl">
+            {loading ? <div className="w-full max-w-xl">
                 {/* Progress Header */}
+                <div className="flex flex-col items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-500"></div>
+                    <p className="mt-4 text-zinc-400 text-lg">Loading...</p>
+                </div>
+
+            </div> : <div className="w-full max-w-xl">
                 <div className="mb-8">
                     <p className="text-zinc-500 text-sm font-medium mb-2 uppercase tracking-wider">Step {currentStep} of {totalSteps}</p>
 
@@ -44,7 +73,7 @@ function OnboardingContent() {
                 <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl shadow-black/50">
                     {renderStep()}
                 </div>
-            </div>
+            </div>}
         </div>
     )
 }

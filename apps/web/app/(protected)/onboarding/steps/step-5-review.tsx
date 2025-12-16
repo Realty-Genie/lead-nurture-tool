@@ -4,15 +4,27 @@ import { useOnboarding } from '../onboarding-context'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle } from 'lucide-react'
-
+import { AlertTriangle, Loader2 } from 'lucide-react'
+import { useAuth } from '@clerk/nextjs'
+import { api } from '@/lib/api'
+import { useState } from 'react'
 export default function Step5Review() {
     const { data, prevStep, goToStep } = useOnboarding()
+    const [loading, setLoading] = useState(false)
+    const { getToken } = useAuth()
     const router = useRouter()
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         console.log('Onboarding Data:', JSON.stringify(data, null, 2))
         //  TODO: In a real app, you would send this to your backend here
+        const token = await getToken()
+        setLoading(true)
+        const response = await api.post('/api/users/onboarding', data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+        setLoading(false)
         router.push('/dashboard')
     }
 
@@ -52,12 +64,14 @@ export default function Step5Review() {
                 <ReviewItem label="Email" value={data.professionalEmail} step={1} />
                 <ReviewItem label="Years in Business" value={`${data.yearsInBusiness} years`} step={1} />
 
-                <ReviewItem label="Company Name" value={data.companyName} step={2} />
+                <ReviewItem label="Company Name" value={data.businessName} step={2} />
                 <ReviewItem label="Markets" value={data.markets.join(', ')} step={2} />
 
-                <ReviewItem label="Realtor Type" value={data.realtorType === 'solo' ? 'Solo Agent' : 'Team Brand'} step={3} />
+                <ReviewItem label="Realtor Type" value={data.realtorType === 'Individual' ? 'Individual' : 'Agency'} step={3} />
                 <ReviewItem label="Brokerage Name" value={data.brokerageName} step={4} />
-                <ReviewItem label="Brand Logo" value={data.brandLogo} step={4} isImage />
+                <ReviewItem label="Brand Logo" value={data.brokerageLogoUrl} step={4} isImage />
+                <ReviewItem label="Brand Logo" value={data.brandLogoUrl} step={4} isImage />
+                <ReviewItem label="Signature Image" value={data.signatureImageUrl} step={4} isImage />
             </div>
 
             <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg flex gap-3 items-start">
@@ -72,14 +86,22 @@ export default function Step5Review() {
                     variant="ghost"
                     onClick={prevStep}
                     className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    disabled={loading}
                 >
                     Back
                 </Button>
                 <Button
                     onClick={handleFinish}
                     className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8"
+                    disabled={loading}
                 >
-                    Finish
+                    {loading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finishing...
+                        </>
+                    ) : (
+                        'Finish'
+                    )}
                 </Button>
             </div>
         </div>

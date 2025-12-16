@@ -10,7 +10,9 @@ import { Upload, Loader2 } from 'lucide-react'
 
 export default function Step4BrandingExtended() {
     const { data, updateData, nextStep, prevStep } = useOnboarding()
-    const [isUploading, setIsUploading] = useState(false)
+    const [isBrandLogoUploading, setIsBrandLogoUploading] = useState(false)
+    const [isSignatureUploading, setIsSignatureUploading] = useState(false)
+    const [isBrokerageLogoUploading, setIsBrokerageLogoUploading] = useState(false)
 
     const handleNext = () => {
         if (!data.brokerageName) {
@@ -20,36 +22,55 @@ export default function Step4BrandingExtended() {
         nextStep()
     }
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0]
-            setIsUploading(true)
+    const handleUpload = async (file: File, func: (value: boolean) => void) => {
+        func(true)
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
 
-            try {
-                const formData = new FormData()
-                formData.append('file', file)
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
 
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-
-                if (!response.ok) {
-                    throw new Error('Upload failed')
-                }
-
-                const result = await response.json()
-                if (result.secure_url) {
-                    updateData({ brandLogo: result.secure_url })
-                }
-            } catch (error) {
-                console.error('Error uploading image:', error)
-                alert('Failed to upload image. Please check your Cloudinary configuration.')
-            } finally {
-                setIsUploading(false)
+            if (!response.ok) {
+                throw new Error('Upload failed')
             }
+
+            const result = await response.json()
+            return result.secure_url;
+        } catch (error) {
+            console.error('Error uploading image:', error)
+            alert('Failed to upload image. Please check your Cloudinary configuration.')
+        } finally {
+            func(false)
         }
     }
+
+    const handleBrandLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            const secureUrl = await handleUpload(file, setIsBrandLogoUploading)
+            updateData({ brandLogoUrl: secureUrl })
+        }
+    }
+
+    const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            const secureUrl = await handleUpload(file, setIsSignatureUploading)
+            updateData({ signatureImageUrl: secureUrl })
+        }
+    }
+
+    const handleBrokerageLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0]
+            const secureUrl = await handleUpload(file, setIsBrokerageLogoUploading)
+            updateData({ brokerageLogoUrl: secureUrl })
+        }
+    }
+
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -62,45 +83,124 @@ export default function Step4BrandingExtended() {
                 <div className="space-y-2">
                     <Label className="text-zinc-300">Realtor Type</Label>
                     <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-md text-white capitalize">
-                        {data.realtorType === 'solo' ? 'Solo Agent' : 'Team Brand'}
+                        {data.realtorType === 'Individual' ? 'Individual' : 'Agency'}
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-zinc-300">Upload Brand Logo</Label>
-                    <Card className="border-2 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 transition-colors cursor-pointer relative overflow-hidden group">
-                        <Input
-                            type="file"
-                            accept="image/*"
-                            className="absolute inset-0 opacity-0 cursor-pointer z-10 h-full"
-                            onChange={handleFileChange}
-                            disabled={isUploading}
-                        />
-                        <div className="flex flex-col items-center justify-center py-8 text-zinc-400 group-hover:text-yellow-500 transition-colors">
-                            {isUploading ? (
-                                <div className="text-center">
-                                    <Loader2 className="w-8 h-8 mb-2 animate-spin text-yellow-500" />
-                                    <p className="text-sm text-yellow-500">Uploading...</p>
-                                </div>
-                            ) : data.brandLogo ? (
-                                <div className="text-center relative z-20">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        src={data.brandLogo}
-                                        alt="Brand Logo"
-                                        className="h-16 w-auto object-contain mx-auto mb-2 rounded-md"
-                                    />
-                                    <p className="text-xs">Click to change</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <Upload className="w-8 h-8 mb-2" />
-                                    <p className="text-sm">Click to upload or drag and drop</p>
-                                </>
-                            )}
-                        </div>
-                    </Card>
+                {/* Grouping upload sections into a grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Brand Logo */}
+                    <div className="space-y-2">
+                        <Label className="text-zinc-300">Upload Brand Logo</Label>
+                        <Card className="border-2 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 transition-colors cursor-pointer relative overflow-hidden group">
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 opacity-0 cursor-pointer z-10 h-full"
+                                onChange={handleBrandLogoUpload}
+                                disabled={isBrandLogoUploading}
+                            />
+                            <div className="flex flex-col items-center justify-center py-8 text-zinc-400 group-hover:text-yellow-500 transition-colors">
+                                {isBrandLogoUploading ? (
+                                    <div className="text-center">
+                                        <Loader2 className="w-8 h-8 mb-2 animate-spin text-yellow-500" />
+                                        <p className="text-sm text-yellow-500">Uploading...</p>
+                                    </div>
+                                ) : data.brandLogoUrl ? (
+                                    <div className="text-center relative z-20">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={data.brandLogoUrl}
+                                            alt="Brand Logo"
+                                            className="h-16 w-auto object-contain mx-auto mb-2 rounded-md"
+                                        />
+                                        <p className="text-xs">Click to change</p>
+                                    </div>
+                                ) : (
+                                    <div className='flex flex-col items-center justify-center p-2 text-center'>
+                                        <Upload className="w-8 h-8 mb-2" />
+                                        <p className="text-sm">Click to upload or drag and drop</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Signature */}
+                    <div className="space-y-2">
+                        <Label className="text-zinc-300">Upload Signature</Label>
+                        <Card className="border-2 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 transition-colors cursor-pointer relative overflow-hidden group">
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 opacity-0 cursor-pointer z-10 h-full"
+                                onChange={handleSignatureUpload}
+                                disabled={isSignatureUploading}
+                            />
+                            <div className="flex flex-col items-center justify-center py-8 text-zinc-400 group-hover:text-yellow-500 transition-colors">
+                                {isSignatureUploading ? (
+                                    <div className="text-center">
+                                        <Loader2 className="w-8 h-8 mb-2 animate-spin text-yellow-500" />
+                                        <p className="text-sm text-yellow-500">Uploading...</p>
+                                    </div>
+                                ) : data.signatureImageUrl ? (
+                                    <div className="text-center relative z-20">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={data.signatureImageUrl}
+                                            alt="Brand Logo"
+                                            className="h-16 w-auto object-contain mx-auto mb-2 rounded-md"
+                                        />
+                                        <p className="text-xs">Click to change</p>
+                                    </div>
+                                ) : (
+                                    <div className='flex flex-col items-center justify-center p-2 text-center'>
+                                        <Upload className="w-8 h-8 mb-2" />
+                                        <p className="text-sm">Click to upload or drag and drop</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Brokerage Logo */}
+                    <div className="space-y-2">
+                        <Label className="text-zinc-300">Upload brokerage logo</Label>
+                        <Card className="border-2 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 transition-colors cursor-pointer relative overflow-hidden group">
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 opacity-0 cursor-pointer z-10 h-full"
+                                onChange={handleBrokerageLogoUpload}
+                                disabled={isBrokerageLogoUploading}
+                            />
+                            <div className="flex flex-col items-center justify-center py-8 text-zinc-400 group-hover:text-yellow-500 transition-colors">
+                                {isBrokerageLogoUploading ? (
+                                    <div className="text-center">
+                                        <Loader2 className="w-8 h-8 mb-2 animate-spin text-yellow-500" />
+                                        <p className="text-sm text-yellow-500">Uploading...</p>
+                                    </div>
+                                ) : data.brokerageLogoUrl ? (
+                                    <div className="text-center relative z-20">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={data.brokerageLogoUrl}
+                                            alt="Brand Logo"
+                                            className="h-16 w-auto object-contain mx-auto mb-2 rounded-md"
+                                        />
+                                        <p className="text-xs">Click to change</p>
+                                    </div>
+                                ) : (
+                                    <div className='flex flex-col items-center justify-center p-2 text-center'>
+                                        <Upload className="w-8 h-8 mb-2" />
+                                        <p className="text-sm">Click to upload or drag and drop</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
                 </div>
+
 
                 <div className="space-y-2">
                     <Label htmlFor="brokerage" className="text-zinc-300">Brokerage Name</Label>
@@ -124,7 +224,7 @@ export default function Step4BrandingExtended() {
                 </Button>
                 <Button
                     onClick={handleNext}
-                    disabled={isUploading}
+                    disabled={isBrandLogoUploading || isSignatureUploading || isBrokerageLogoUploading}
                     className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Continue

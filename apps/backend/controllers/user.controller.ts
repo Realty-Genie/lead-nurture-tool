@@ -3,19 +3,45 @@ import { clerkClient } from '@clerk/express';
 import { RealtorModel } from '../models/realtor.model';
 import { UserModel } from '../models/user.model';
 
+export const getOnboardStatus = async (req: Request, res: Response) => {
+    try {
+        const clerkUserId = req.userId;
+        const currentUser = req.user;
+
+        if (!clerkUserId || !currentUser) {
+            return res.status(401).json({ error: 'User not authenticated' });
+        }
+
+        const realtor = await RealtorModel.findOne({ clerkUserId });
+
+        if (realtor) {
+            return res.json({
+                isOnboarded: true
+            });
+        }
+
+        res.json({
+            isOnboarded: false
+        });
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ error: 'Failed to fetch user information' });
+    }
+}
+
 export const getCurrentUser = async (req: Request, res: Response) => {
     try {
         const clerkUserId = req.userId;
-        const currentUser = req.user; 
-        
+        const currentUser = req.user;
+
         if (!clerkUserId || !currentUser) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
 
         const clerkUser = await clerkClient.users.getUser(clerkUserId);
-        
+
         const realtor = await RealtorModel.findOne({ clerkUserId });
-        
+
         if (realtor) {
             return res.json({
                 id: realtor._id,
@@ -24,7 +50,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
                 email: clerkUser.emailAddresses[0]?.emailAddress,
                 profileImageUrl: realtor.profileImageUrl || clerkUser.imageUrl,
                 isOnboarded: true,
-                
+
                 phNo: realtor.phNo,
                 brokerageName: realtor.brokerageName,
                 professionalEmail: realtor.professionalEmail,
@@ -58,8 +84,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 export const createOrUpdateRealtor = async (req: Request, res: Response) => {
     try {
         const clerkUserId = req.userId;
-        const currentUser = req.user; 
-        
+        const currentUser = req.user;
+
         if (!clerkUserId || !currentUser) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
@@ -110,7 +136,7 @@ export const createOrUpdateRealtor = async (req: Request, res: Response) => {
         } else {
             realtor = new RealtorModel({
                 clerkUserId,
-                
+
                 phNo: phoneNumber || phNo,
                 brokerageName: businessName || brokerageName,
                 licenseNumber: licenseNumber,

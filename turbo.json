@@ -4,6 +4,7 @@
         "PORT",
         "MONGO_URI",
         "CLERK_SECRET_KEY",
+        "NEXT_PUBLIC_API_URL",
         "CLERK_PUBLISHABLE_KEY",
         "CLOUDINARY_CLOUD_NAME",
         "CLOUDINARY_API_KEY",

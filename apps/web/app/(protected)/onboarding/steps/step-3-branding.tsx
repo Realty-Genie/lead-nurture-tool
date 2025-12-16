@@ -34,8 +34,8 @@ export default function Step3Branding() {
                             <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                            <SelectItem value="solo">Solo Agent</SelectItem>
-                            <SelectItem value="team">Team Brand</SelectItem>
+                            <SelectItem value="Individual">Individual</SelectItem>
+                            <SelectItem value="Agency">Agency</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

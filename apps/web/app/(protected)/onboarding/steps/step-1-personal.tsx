@@ -30,9 +30,17 @@ export default function Step1Personal() {
                     <Label htmlFor="phone" className="text-zinc-300">Phone Number</Label>
                     <Input
                         id="phone"
+                        type="tel" // Use type="tel" for phone number input
                         placeholder="+1 (555) 000-0000"
                         value={data.phoneNumber}
-                        onChange={(e) => updateData({ phoneNumber: e.target.value })}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow digits, spaces, hyphens, parentheses, and a leading plus sign
+                            const phoneRegex = /^[\d\s\-\(\)\+]*$/;
+                            if (phoneRegex.test(value) || value === '') {
+                                updateData({ phoneNumber: value });
+                            }
+                        }}
                         className="bg-zinc-900 border-zinc-800 text-white focus:ring-yellow-500 focus:border-yellow-500"
                     />
                 </div>
@@ -44,7 +52,9 @@ export default function Step1Personal() {
                         type="email"
                         placeholder="you@company.com"
                         value={data.professionalEmail}
-                        onChange={(e) => updateData({ professionalEmail: e.target.value })}
+                        onChange={(e) => {
+                            updateData({ professionalEmail: e.target.value })
+                        }}
                         className="bg-zinc-900 border-zinc-800 text-white focus:ring-yellow-500 focus:border-yellow-500"
                     />
                 </div>

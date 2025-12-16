@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCurrentUser, createOrUpdateRealtor } from '../controllers/user.controller';
+import { getCurrentUser, createOrUpdateRealtor, getOnboardStatus } from '../controllers/user.controller';
 import { requireAuthApi, requireAuthWithUserCreation } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -9,5 +9,7 @@ router.get('/me', requireAuthApi, getCurrentUser);
 
 // Use special auth for onboarding (creates user if needed)
 router.post('/onboarding', requireAuthWithUserCreation, createOrUpdateRealtor);
+
+router.get('/onboard-status', requireAuthApi, getOnboardStatus);
 
 export default router;
