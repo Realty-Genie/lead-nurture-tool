@@ -12,7 +12,7 @@ export default function Step5Review() {
 
     const handleFinish = () => {
         console.log('Onboarding Data:', JSON.stringify(data, null, 2))
-        // In a real app, you would send this to your backend here
+        //  TODO: In a real app, you would send this to your backend here
         router.push('/dashboard')
     }
 

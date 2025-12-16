@@ -5,7 +5,7 @@ import { Layers, Users, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function GettingStarted() {
-    // Mock data: check if user has campaigns. For now, assume 0.
+    // TODO: check if user has campaigns. For now, assume 0.
     const hasCampaigns = false;
 
     if (hasCampaigns) return null;
@@ -23,6 +23,7 @@ export function GettingStarted() {
                             <div className="mb-4 rounded-full bg-primary/10 p-3 text-primary group-hover:bg-primary group-hover:text-primary-foreground">
                                 <Layers className="h-6 w-6" />
                             </div>
+                            {/* TODO: Creating campaigns*/}
                             <h3 className="font-semibold">Create Campaign</h3>
                             <p className="text-sm text-muted-foreground">Organize leads</p>
                         </div>

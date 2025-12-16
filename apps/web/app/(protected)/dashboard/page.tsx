@@ -8,6 +8,7 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+                {/* TODO: Take this from Clerk */}
                 <p className="text-muted-foreground">Welcome back, Mohak Gupta!</p>
             </div>
 
