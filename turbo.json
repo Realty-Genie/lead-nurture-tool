@@ -1,17 +1,25 @@
 {
     "$schema": "https://turbo.build/schema.json",
+    "globalEnv": [
+        "PORT",
+        "MONGO_URI",
+        "CLERK_SECRET_KEY",
+        "CLERK_PUBLISHABLE_KEY",
+        "CLOUDINARY_CLOUD_NAME",
+        "CLOUDINARY_API_KEY",
+        "CLOUDINARY_API_SECRET",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "SERVER_PORT"
+    ],
     "tasks": {
         "dev": {
-            "cache": false
+            "cache": false,
+            "persistent": true
         },
         "build": {
-            "dependsOn": [
-                "^build"
-            ],
-            "outputs": [
-                ".next/**"
+            "env": [
+                "PORT"
             ]
-        },
-        "lint": {}
+        }
     }
 }

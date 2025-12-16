@@ -1,7 +1,10 @@
 {
-  "name": ".",
+  "name": "backend-lead-nurture-tool",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "dev": "bun run index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cookie-parser": "^1.4.10",

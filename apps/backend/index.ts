@@ -16,9 +16,9 @@ import connectDB from './db/db';
 
 const app = express();
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: '*',
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: '*',
 }));
 
 app.use(cookieParser());
@@ -54,9 +54,9 @@ app.use('/api/leads', requireAuthApi, requiredRealtorAuth, leadRoutes);
 
 app.use('/api/campaigns', requireAuthApi, requiredRealtorAuth, campaingRoutes);
 
-app.use('/api/mail', requireAuthApi, requiredRealtorAuth, mailRoutes);
+//app.use('/api/mail', requireAuthApi, requiredRealtorAuth, mailRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.SERVER_PORT
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

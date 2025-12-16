@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { connection } from "../queues/connection.js";
+/* import { connection } from "../queues/connection.js";
 
 console.log("Worker starting...");
 
@@ -19,4 +19,4 @@ new Worker(
 );
 
 console.log("Worker is now BLOCKED");
-console.log("waiting for jobs...");
+console.log("waiting for jobs...") */;
