@@ -22,14 +22,44 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
+
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function CreateCampaignModal() {
     const [open, setOpen] = useState(false);
+    const { getToken } = useAuth();
+    const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Handle form submission logic here
-        setOpen(false);
+        const formData = new FormData(e.currentTarget);
+
+        const data = Object.fromEntries(formData);
+
+        try {
+            const token = await getToken();
+            const response = await api.post('/api/campaigns/create', {
+                name: data.name,
+                objective: data.objective,
+                targetPersona: data.persona,
+                description: data.description,
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                }
+            })
+
+            console.log(response.data)
+            toast.success("Campaign created successfully")
+            setOpen(false);
+            router.refresh();
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to create campaign");
+        }
     };
 
     return (
@@ -50,11 +80,11 @@ export function CreateCampaignModal() {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Campaign Name</Label>
-                            <Input id="name" placeholder="e.g., Summer Buyer Outreach" required />
+                            <Input id="name" name="name" placeholder="e.g., Summer Buyer Outreach" required />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="objective">Objective</Label>
-                            <Select required>
+                            <Select name="objective" required>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select objective" />
                                 </SelectTrigger>
@@ -68,11 +98,11 @@ export function CreateCampaignModal() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="persona">Target Persona</Label>
-                            <Input id="persona" placeholder="e.g., First-time Homebuyers" required />
+                            <Input id="persona" name="persona" placeholder="e.g., First-time Homebuyers" required />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="description">Description (Optional)</Label>
-                            <Textarea id="description" placeholder="Briefly describe the campaign..." />
+                            <Textarea id="description" name="description" placeholder="Briefly describe the campaign..." />
                         </div>
                     </div>
                     <DialogFooter>

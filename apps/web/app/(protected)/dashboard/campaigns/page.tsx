@@ -1,29 +1,37 @@
-"use client";
-
-import { useState } from "react";
 import { CreateCampaignModal } from "@/components/campaigns/CreateCampaignModal";
 import { CampaignCard } from "@/components/campaigns/CampaignCard";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { auth } from "@clerk/nextjs/server";
 
-export default function CampaignsPage() {
-    // Mock data
-    const [campaigns, setCampaigns] = useState([
-        {
-            id: "1",
-            name: "Summer Buyer Outreach",
-            status: "active" as const,
-            leads: 124,
-            createdAt: "12/11/2025",
-        },
-        {
-            id: "2",
-            name: "Cold Lead Re-engagement",
-            status: "paused" as const,
-            leads: 45,
-            createdAt: "10/11/2025",
-        },
-    ]);
+type Campaign = {
+    id: string;
+    name: string;
+    totalLeads: number;
+    createdAt: string;
+    status: string;
+    objective: string;
+    targetPersona: string;
+    description: string;
+}
+
+export default async function CampaignsPage() {
+    const { getToken } = await auth();
+    const token = await getToken();
+
+    let campaigns: Campaign[] = [];
+
+    try {
+        const response = await api.get('/api/campaigns/all', {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        campaigns = response.data;
+    } catch (error) {
+        console.error("Failed to fetch campaigns", error);
+    }
 
     return (
         <div className="space-y-8">

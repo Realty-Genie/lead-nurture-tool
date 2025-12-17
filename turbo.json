@@ -10,7 +10,14 @@
         "CLOUDINARY_API_KEY",
         "CLOUDINARY_API_SECRET",
         "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "SERVER_PORT"
+        "SERVER_PORT",
+        "MAILGUN_API_KEY",
+        "MAIL_FROM",
+        "MAILGUN_DOMAIN",
+        "UNSUBSCRIBE_JWT_SECRET",
+        "BASE_URL",
+        "REDIS_HOST",
+        "REDIS_PORT"
     ],
     "tasks": {
         "dev": {

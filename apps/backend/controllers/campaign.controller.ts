@@ -5,14 +5,14 @@ import type { Request, Response } from 'express';
 
 export const getAllCampaigns = async (req: Request, res: Response) => {
     try {
-        const realtor = req.realtor; 
-        
+        const realtor = req.realtor;
+
         if (!realtor) {
             return res.status(403).json({ error: 'Realtor access required' });
         }
 
         const populatedRealtor = await RealtorModel.findById(realtor._id).populate('campaignsId');
-        
+
         if (!populatedRealtor) {
             return res.status(404).json({ error: 'Realtor profile not found' });
         }
@@ -20,7 +20,7 @@ export const getAllCampaigns = async (req: Request, res: Response) => {
         const campaignData = (populatedRealtor.campaignsId as any[]).map((campaign) => {
 
             const totalLeads = campaign.leads ? campaign.leads.length : 0;
-            
+
             return {
                 id: campaign._id,
                 name: campaign.campaignName,
@@ -32,7 +32,7 @@ export const getAllCampaigns = async (req: Request, res: Response) => {
                 description: campaign.description
             };
         });
-        
+
         res.json(campaignData);
     } catch (error) {
         console.error('Error fetching campaigns:', error);
@@ -43,10 +43,10 @@ export const getAllCampaigns = async (req: Request, res: Response) => {
 export const createCampaign = async (req: Request, res: Response) => {
 
     console.log('Realtor from middleware:', req.realtor ? { id: req.realtor._id, name: req.realtor.brokerageName } : 'null');
-    
+
     try {
-        const realtor = req.realtor; 
-        
+        const realtor = req.realtor;
+
         if (!realtor) {
             console.log('ERROR: No realtor found in request');
             return res.status(403).json({ error: 'Realtor access required' });
@@ -72,7 +72,7 @@ export const createCampaign = async (req: Request, res: Response) => {
             objective: objective.trim(),
             targetPersona: targetPersona.trim(),
             description: description?.trim() || '',
-            status: 'Active',
+            status: 'Paused',
             realtorId: realtor._id
         });
 
@@ -94,8 +94,8 @@ export const createCampaign = async (req: Request, res: Response) => {
 
 export const updateCampaignStatus = async (req: Request, res: Response) => {
     try {
-        const realtor = req.realtor; 
-        
+        const realtor = req.realtor;
+
         if (!realtor) {
             return res.status(403).json({ error: 'Realtor access required' });
         }
@@ -122,7 +122,7 @@ export const updateCampaignStatus = async (req: Request, res: Response) => {
 export const updateCampaign = async (req: Request, res: Response) => {
     try {
         const realtor = req.realtor;
-        
+
         if (!realtor) {
             return res.status(403).json({ error: 'Realtor access required' });
         }
@@ -131,7 +131,7 @@ export const updateCampaign = async (req: Request, res: Response) => {
 
         const campaign = await CampaignModel.findOneAndUpdate(
             { _id: campaignId, realtorId: realtor._id },
-            { 
+            {
                 campaignName: name,
                 objective,
                 targetPersona,
@@ -153,8 +153,8 @@ export const updateCampaign = async (req: Request, res: Response) => {
 
 export const deleteCampaign = async (req: Request, res: Response) => {
     try {
-        const realtor = req.realtor; 
-        
+        const realtor = req.realtor;
+
         if (!realtor) {
             console.log('ERROR: No realtor found in request');
             return res.status(403).json({ error: 'Realtor access required' });
@@ -163,9 +163,9 @@ export const deleteCampaign = async (req: Request, res: Response) => {
         const { campaignId } = req.body;
         console.log('Campaign ID to delete:', campaignId);
 
-        const campaign = await CampaignModel.findOneAndDelete({ 
-            _id: campaignId, 
-            realtorId: realtor._id 
+        const campaign = await CampaignModel.findOneAndDelete({
+            _id: campaignId,
+            realtorId: realtor._id
         });
 
         if (!campaign) {
