@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { emailQueue } from '../queues/emailQueue.js';
 import { MailModel } from '../models/mails.model.js';
 import { generateMail } from '../services/generateMail.service.js';
-import { basicTemplate, brandedTemplate, professionalTemplate, modernTemplate } from '../email-templates/emailTemplates.js';
+import { basicTemplate, brandedTemplate, professionalTemplate, modernTemplate } from '../templates/templateHandler.js';
 
 const DELAY_DAYS = 5;
 const SECONDS_PER_DAY = 24 * 60 * 60;

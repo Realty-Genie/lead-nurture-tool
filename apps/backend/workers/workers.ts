@@ -9,7 +9,7 @@ import {
   brandedTemplate,
   professionalTemplate,
   modernTemplate,
-} from "../email-templates/emailTemplates.ts";
+} from "../templates/templateHandler.ts";
 
 import { RealtorModel } from "../models/realtor.model.js";
 
