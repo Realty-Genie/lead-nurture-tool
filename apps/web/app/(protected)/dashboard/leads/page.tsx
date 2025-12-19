@@ -13,8 +13,34 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export default function LeadsPage() {
+    const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
+    const [selectedCampaign, setSelectedCampaign] = useState<{ id: string; name: string }>({
+        id: "all",
+        name: "all",
+    });
+    const { getToken } = useAuth();
+    useEffect(() => {
+        const fetchCampaigns = async () => {
+            try {
+                const response = await api.get('/api/campaigns/all', {
+                    headers: {
+                        'Authorization': `Bearer ${await getToken()}`
+                    },
+                });
+                setCampaigns(response.data);
+                // Here you would set the fetched campaigns into state and map them to SelectItem components
+            } catch (error) {
+                console.error('Error fetching campaigns:', error);
+            }
+        }
+        fetchCampaigns()
+    }, [])
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -42,13 +68,26 @@ export default function LeadsPage() {
                         className="pl-8"
                     />
                 </div>
-                <Select>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="All Batches" />
+                <Select
+                    onValueChange={(value) => {
+                        if (value === "all") {
+                            setSelectedCampaign({ id: "all", name: "all" });
+                            return;
+                        }
+                        const campaign = campaigns.find(c => c.id === value);
+                        setSelectedCampaign(campaign ? { id: campaign.id, name: campaign.name } : { id: "all", name: "all" });
+                    }}
+                >
+                    <SelectTrigger className="w-45">
+                        <SelectValue placeholder="All Campaigns" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Batches</SelectItem>
-                        <SelectItem value="batch1">Batch 1</SelectItem>
+                        <SelectItem value="all">All Campaigns</SelectItem>
+                        {campaigns.map((campaign) => (
+                            <SelectItem key={campaign.id} value={campaign.id}>
+                                {campaign.name}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
                 <Button variant="outline">
@@ -56,7 +95,7 @@ export default function LeadsPage() {
                 </Button>
             </div>
 
-            <LeadsTable />
+            <LeadsTable campaigns={selectedCampaign} />
         </div>
     );
 }
