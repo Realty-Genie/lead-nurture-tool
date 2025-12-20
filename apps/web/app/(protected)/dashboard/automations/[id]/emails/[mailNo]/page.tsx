@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Send } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Eye, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
 
 interface EmailData {
     mail: {
@@ -22,12 +25,20 @@ export default function ComposeEmailPage() {
     const { id, mailNo } = useParams();
     const router = useRouter();
     const [subject, setSubject] = useState("");
+    const { getToken } = useAuth()
     const [body, setBody] = useState("");
+    const [templateStyle, setTemplateStyle] = useState("basic");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Retrieve emails from sessionStorage
-        const storedEmails = sessionStorage.getItem('generatedEmails');
+        // First try to retrieve emails from localStorage (persistent)
+        let storedEmails = localStorage.getItem(`campaign_${id}_emails`);
+
+        // Fallback to sessionStorage for backward compatibility
+        if (!storedEmails) {
+            storedEmails = sessionStorage.getItem('generatedEmails');
+        }
+
         if (storedEmails) {
             const emails: EmailData[] = JSON.parse(storedEmails);
             const email = emails.find(e => e.mail.mailNo === Number(mailNo));
@@ -44,27 +55,36 @@ export default function ComposeEmailPage() {
         }
         setLoading(false);
     }, [id, mailNo, router]);
-
     const handleSave = () => {
-        // Update the email in sessionStorage
-        const storedEmails = sessionStorage.getItem('generatedEmails');
-        if (storedEmails) {
-            const emails: EmailData[] = JSON.parse(storedEmails);
-            const updatedEmails = emails.map(e =>
-                e.mail.mailNo === Number(mailNo)
-                    ? { mail: { ...e.mail, subject, body } }
-                    : e
-            );
-            sessionStorage.setItem('generatedEmails', JSON.stringify(updatedEmails));
-            toast.success("Email saved successfully!");
-        }
-    };
+        // First try to retrieve emails from localStorage (persistent)
+        let storedEmails = localStorage.getItem(`campaign_${id}_emails`);
 
-    const handleSend = () => {
-        handleSave();
-        // TODO: Implement actual send functionality
-        toast.success("Email sent successfully! (Coming soon)");
-    };
+        // Fallback to sessionStorage for backward compatibility
+        if (!storedEmails) {
+            storedEmails = sessionStorage.getItem('generatedEmails');
+        }
+
+        if (!storedEmails) {
+            toast.error("No emails found to save");
+            return;
+        }
+
+        const emails: EmailData[] = JSON.parse(storedEmails);
+        const email = emails.find(e => e.mail.mailNo === Number(mailNo));
+
+        if (email) {
+            email.mail.subject = subject;
+            email.mail.body = body;
+
+            const updatedEmailsData = JSON.stringify(emails);
+            // Save to both localStorage and sessionStorage
+            localStorage.setItem(`campaign_${id}_emails`, updatedEmailsData);
+            sessionStorage.setItem('generatedEmails', updatedEmailsData);
+            toast.success("Email saved successfully!");
+        } else {
+            toast.error("Email not found");
+        }
+    }
 
     if (loading) {
         return (
@@ -73,6 +93,34 @@ export default function ComposeEmailPage() {
             </div>
         );
     }
+
+    const handlePreview = async () => {
+        try {
+            const token = await getToken();
+            const response = await api.get(`/api/mail/preview?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}&templateStyle=${templateStyle}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Open preview in a new window
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            if (previewWindow) {
+                previewWindow.document.write(response.data);
+                previewWindow.document.close();
+            } else {
+                toast.error('Please allow pop-ups to view the preview');
+            }
+        } catch (error: any) {
+            console.error('Error generating preview:', error);
+            if (error.response?.status === 403) {
+                toast.error(error.response?.data?.message || 'Template access denied');
+            } else {
+                toast.error('Failed to generate preview');
+            }
+        }
+    }
+
 
     return (
         <div className="space-y-8">
@@ -90,22 +138,24 @@ export default function ComposeEmailPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleSave}>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save
-                    </Button>
-                    <Button onClick={handleSend}>
-                        <Send className="mr-2 h-4 w-4" />
-                        Send
-                    </Button>
-                </div>
+
             </div>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex justify-between">
                     <CardTitle>Mail #{mailNo}</CardTitle>
                     <CardDescription>Edit the subject and body of your email</CardDescription>
+                    <div>
+                        <Button variant="outline" onClick={handlePreview}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                        </Button>
+
+                        <Button variant="outline" onClick={handleSave}>
+                            <Save className="mr-2 h-4 w-4" />
+                            Save
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
@@ -134,20 +184,30 @@ export default function ComposeEmailPage() {
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <label htmlFor="template" className="text-sm font-medium">
+                            Template Style
+                        </label>
+                        <Select value={templateStyle} onValueChange={setTemplateStyle}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a template" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="basic">Basic</SelectItem>
+                                <SelectItem value="branded">Branded</SelectItem>
+                                <SelectItem value="professional">Professional</SelectItem>
+                                <SelectItem value="modern">Modern</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                            Select the template style for your email preview
+                        </p>
+                    </div>
+
                     <div className="flex justify-between items-center pt-4 border-t">
                         <p className="text-sm text-muted-foreground">
                             {body.length} characters
                         </p>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={handleSave}>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save Draft
-                            </Button>
-                            <Button onClick={handleSend}>
-                                <Send className="mr-2 h-4 w-4" />
-                                Send Email
-                            </Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>

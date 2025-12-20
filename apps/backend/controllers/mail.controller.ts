@@ -210,6 +210,7 @@ export const getMailPreview = async (req: Request, res: Response) => {
       requestedTemplate,
       realtor
     );
+    res.setHeader('Content-Type', 'text/html');
     res.send(previewHtml);
   } catch (error) {
     console.error("Error generating mail preview:", error);
