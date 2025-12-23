@@ -159,7 +159,7 @@ export default function AutomationDetailsPage() {
                 campaignId: id,
                 mails: emails
             }, { headers: { Authorization: `Bearer ${token}` } });
-
+            console.log(confirmResponse)
             if (!confirmResponse.data.success) {
                 toast.error("Failed to confirm emails");
                 setIsSending(false);
@@ -167,7 +167,7 @@ export default function AutomationDetailsPage() {
             }
 
             // 2. Handle Festive Trigger if selected
-            if (selectedFestival !== "none") {
+            /* if (selectedFestival !== "none") {
                 try {
                     await api.post('/api/mail/festiveTrigger', {
                         festival: selectedFestival,
@@ -179,7 +179,7 @@ export default function AutomationDetailsPage() {
                     toast.error("Emails confirmed, but failed to enable festive trigger");
                 }
             }
-
+ */
             toast.success("Emails confirmed and scheduled for sending!");
 
             // Clear only this campaign's localStorage
