@@ -161,20 +161,24 @@ export const confirmEmails = async (req: Request, res: Response) => {
       for (const step of mailDoc.steps) {
         const delaySeconds =
           step.step === 0 ? 0 : step.step * DELAY_DAYS * SECONDS_PER_DAY;
-
-        await emailQueue.add(
-          "send-sequence-email-batch",
-          {
-            mailId: mailDoc._id,
-            stepId: step.stepId,
-            realtor,
-            recipients: batch,
-          },
-          {
-            delay: delaySeconds * 1000,
-            removeOnComplete: true,
-          }
-        );
+        try {
+          await emailQueue.add(
+            "send-sequence-email-batch",
+            {
+              mailId: mailDoc._id,
+              stepId: step.stepId,
+              realtor,
+              recipients: batch,
+            },
+            {
+              delay: delaySeconds * 1000,
+              removeOnComplete: true,
+            }
+          );
+        } catch (error) {
+          console.log(error)
+        }
+        console.log("Batch email send scheduled:", batch.length, "recipients");
       }
     }
 
