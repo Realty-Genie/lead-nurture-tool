@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowLeft, Loader2, Mail, Send, Lock, Gift } from "lucide-react";
+import { Sparkles, ArrowLeft, Loader2, Mail, Send, Lock, Gift, Layout } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -63,6 +63,7 @@ export default function AutomationDetailsPage() {
     const [hasEmails, setHasEmails] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
     const [selectedFestival, setSelectedFestival] = useState<string>("none");
+    const [selectedTemplateStyle, setSelectedTemplateStyle] = useState<string>("basic");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -126,7 +127,7 @@ export default function AutomationDetailsPage() {
         setIsGenerating(true);
         try {
             const token = await getToken();
-            const response = await api.post('/api/mail/generate', {campaignId: id}, { headers: { Authorization: `Bearer ${token}` } });
+            const response = await api.post('/api/mail/generate', { campaignId: id }, { headers: { Authorization: `Bearer ${token}` } });
 
             if (response.data && response.data.mails) {
                 const emailsData = JSON.stringify(response.data.mails);
@@ -157,9 +158,10 @@ export default function AutomationDetailsPage() {
             // 1. Confirm Emails
             const confirmResponse = await api.post('/api/mail/confirm', {
                 campaignId: id,
-                mails: emails
+                mails: emails,
+                templateStyle: selectedTemplateStyle
             }, { headers: { Authorization: `Bearer ${token}` } });
-
+            console.log(confirmResponse)
             if (!confirmResponse.data.success) {
                 toast.error("Failed to confirm emails");
                 setIsSending(false);
@@ -167,7 +169,7 @@ export default function AutomationDetailsPage() {
             }
 
             // 2. Handle Festive Trigger if selected
-            if (selectedFestival !== "none") {
+            /* if (selectedFestival !== "none") {
                 try {
                     await api.post('/api/mail/festiveTrigger', {
                         festival: selectedFestival,
@@ -179,7 +181,7 @@ export default function AutomationDetailsPage() {
                     toast.error("Emails confirmed, but failed to enable festive trigger");
                 }
             }
-
+ */
             toast.success("Emails confirmed and scheduled for sending!");
 
             // Clear only this campaign's localStorage
@@ -264,6 +266,19 @@ export default function AutomationDetailsPage() {
                                     <SelectItem value="none">No Festival Trigger</SelectItem>
                                     <SelectItem value="christmas">Christmas</SelectItem>
                                     <SelectItem value="newyear">New Year</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={selectedTemplateStyle} onValueChange={setSelectedTemplateStyle}>
+                                <SelectTrigger className="w-[180px]">
+                                    <Layout className="mr-2 h-4 w-4 text-primary" />
+                                    <SelectValue placeholder="Template Style" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="basic">Basic</SelectItem>
+                                    <SelectItem value="branded">Branded</SelectItem>
+                                    <SelectItem value="professional">Professional</SelectItem>
+                                    <SelectItem value="modern">Modern</SelectItem>
                                 </SelectContent>
                             </Select>
 

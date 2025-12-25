@@ -14,6 +14,12 @@ import {
   modernTemplate,
 } from "../templates/templateHandler.ts";
 
+import dotenv from "dotenv";
+import connectDB from "../db/db";
+
+dotenv.config();
+connectDB();
+
 
 console.log("Email worker starting...");
 
@@ -24,30 +30,34 @@ new Worker(
     if (job.name === "send-sequence-email-batch") {
       const { mailId, stepId, realtor, recipients } = job.data;
       console.log("Processing batch job:", job.id, "Recipients:", recipients.length);
-
       if (!realtor) {
         console.error("Realtor data missing in job, skipping");
         return;
       }
-
-      const mail = await MailModel.findById(mailId).lean();
+      console.log("Yoo")
+      let mail
+      try {
+        mail = await MailModel.findById(mailId).lean();
+      } catch (error) {
+        console.error("Error fetching mail doc:", error);
+        return;
+      }
       if (!mail) {
         console.log("Mail doc not found, skipping");
         return;
       }
-
       const campaign = await CampaignModel.findById(mail.campaignId).lean();
       if (!campaign || campaign.status !== "Active") {
         console.log("Campaign not active or not found, skipping");
         return;
       }
 
+      console.log(recipients)
       const step = mail.steps.find((s) => s.stepId === stepId);
       if (!step) {
         console.log("Step missing, skipping");
         return;
       }
-
       const unsubscribedLeads = await LeadModel.find({
         email: { $in: recipients },
         unsubscribed: true,
@@ -64,7 +74,6 @@ new Worker(
         console.log("All recipients unsubscribed, skipping batch");
         return;
       }
-
       const emailsToSend = validRecipients.map((recipient: string) => {
         const token = generateUnsubscribeToken(mail._id.toString(), recipient);
         const unsubscribeUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/mail/unsubscribe?token=${token}`;
