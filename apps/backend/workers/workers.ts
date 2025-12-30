@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import dotenv from "dotenv";
 import { connection } from "../queues/connection.js";
 import { MailModel } from "../models/mails.model.js";
 import { CampaignModel } from "../models/campaing.model.js";
@@ -6,9 +7,10 @@ import { LeadModel } from "../models/lead.model.js";
 import { sendMail, sendBatchMails } from "../services/mails.service.js";
 import { generateUnsubscribeToken } from "../utils/unsubscribeToken.js";
 import connectDB from "../db/db.ts";
-import dotenv from "dotenv";
+
 dotenv.config();
 connectDB();
+
 import {
   basicTemplate,
   brandedTemplate,
@@ -133,8 +135,6 @@ new Worker(
       }
       return;
     }
-
-
   },
   {
     connection,
