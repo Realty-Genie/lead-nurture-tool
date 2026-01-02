@@ -1,47 +1,66 @@
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import path from "path";
 
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
+// Load env from parent directory using process.cwd()
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-// Load environment variables from the root .env file
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/realtygenie";
 
-const dropIndex = async () => {
+// Define Schema locally to avoid import issues
+const LeadSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true }, // Removed unique: true
+    phNo: { type: String },
+    realtorId: { type: mongoose.Schema.Types.ObjectId, ref: 'RealtorModel', required: true },
+    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'CampaignModel', required: true },
+    address: { type: String },
+    unsubscribed: { type: Boolean, default: false }
+}, { timestamps: true }
+);
+
+// Compound index to ensure email is unique per campaign
+LeadSchema.index({ email: 1, campaignId: 1 }, { unique: true });
+
+const LeadModel = mongoose.model("LeadModel", LeadSchema);
+
+const fixIndexes = async () => {
     try {
-        const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/realtygenie";
-        if (!mongoUri) {
-            throw new Error('MONGO_URI is not defined');
-        }
+        console.log("Connecting to MongoDB at", mongoURI);
+        await mongoose.connect(mongoURI);
+        console.log("Connected to MongoDB");
 
-        await mongoose.connect(mongoUri);
-        console.log('Connected to MongoDB');
+        // List indexes
+        const indexes = await LeadModel.collection.indexes();
+        console.log("Current indexes:", indexes);
 
-        const collection = mongoose.connection.collection('leadmodels'); // Mongoose pluralizes 'LeadModel' to 'leadmodels' usually, or 'leads' if specified. Based on model name 'LeadModel', it's likely 'leadmodels'.
-
-        // List indexes to find the correct one
-        const indexes = await collection.indexes();
-        console.log('Current indexes:', indexes);
-
-        const emailIndex = indexes.find((idx: any) => idx.key.email === 1 && Object.keys(idx.key).length === 1);
-
-        if (emailIndex && emailIndex.name) {
-            console.log(`Found email index: ${emailIndex.name}. Dropping...`);
-            await collection.dropIndex(emailIndex.name);
-            console.log('Successfully dropped email index.');
+        // Drop the incorrect unique index on email if it exists
+        const emailIndex = indexes.find(idx => idx.name === 'email_1');
+        if (emailIndex) {
+            console.log("Dropping incorrect unique index on email...");
+            try {
+                await LeadModel.collection.dropIndex('email_1');
+                console.log("Dropped 'email_1' index.");
+            } catch (e) {
+                console.log("Error dropping index (might not exist):", e);
+            }
         } else {
-            console.log('No global email index found.');
+            console.log("'email_1' index not found.");
         }
 
-        // Verify
-        const updatedIndexes = await collection.indexes();
-        console.log('Updated indexes:', updatedIndexes);
+        // Sync indexes to create the new compound index defined in the model
+        console.log("Syncing indexes...");
+        await LeadModel.syncIndexes();
+        console.log("Indexes synced.");
 
+        const newIndexes = await LeadModel.collection.indexes();
+        console.log("New indexes:", newIndexes);
+
+        process.exit(0);
     } catch (error) {
-        console.error('Error:', error);
-    } finally {
-        await mongoose.disconnect();
-        console.log('Disconnected from MongoDB');
+        console.error("Error fixing indexes:", error);
+        process.exit(1);
     }
 };
 
-dropIndex();
+fixIndexes();
